@@ -9,3 +9,7 @@
 	path = lib/aave-address-book
 	url = https://github.com/bgd-labs/aave-address-book
 	branch = v1.17.0
+[submodule "lib/aave-helpers"]
+	path = lib/aave-helpers
+	url = https://github.com/bgd-labs/aave-helpers
+	branch = v2.2.0
