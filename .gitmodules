@@ -17,3 +17,6 @@
 	path = lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
 	branch = v4.8.1
+[submodule "lib/gho-core"]
+	path = lib/gho-core
+	url = https://github.com/aave/gho-core
