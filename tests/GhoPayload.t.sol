@@ -57,9 +57,9 @@ contract AaveV3EthGhoUSDPayloadTest is ProtocolV3_0_1TestBase, TestWithExecutor 
 
     ReserveConfig[] memory allConfigsBefore = _getReservesConfigs(AaveV3Ethereum.POOL);
 
-    // createConfigurationSnapshot('preGhoUSD', AaveV3Ethereum.POOL);
+    //TODO: Snapshot report createConfigurationSnapshot('preGhoUSD', AaveV3Ethereum.POOL);
     ghoAip.execute();
-    // createConfigurationSnapshot('postGhoUSD', AaveV3Ethereum.POOL);
+    //TODO: Snapshot report createConfigurationSnapshot('postGhoUSD', AaveV3Ethereum.POOL);
 
     ReserveConfig[] memory allConfigsAfter = _getReservesConfigs(AaveV3Ethereum.POOL);
 

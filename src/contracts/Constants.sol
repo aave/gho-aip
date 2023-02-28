@@ -8,8 +8,6 @@ pragma solidity ^0.8.0;
  */
 library GhoConstants {
   uint8 public constant GHO_DECIMALS = 18;
-  address public constant GHO_ORACLE = 0x4Cfed366cfD75Ec739e0d763f557680Bc656a965;
-
   string public constant ATOKEN_NAME = 'Aave Ethereum GHO';
   string public constant ATOKEN_SYMBOL = 'aEthGHO';
   string public constant VDTOKEN_NAME = 'Aave Ethereum Variable Debt GHO';

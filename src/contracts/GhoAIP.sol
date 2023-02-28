@@ -73,6 +73,9 @@ contract GhoListingPayload is IProposalGenericExecutor {
       params: bytes('') //    params: '0x10',
     });
 
+    // ------------------------------------------------
+    // 3. Configuring of gho reserve
+    // ------------------------------------------------
     IPoolConfigurator configurator = AaveV3Ethereum.POOL_CONFIGURATOR;
 
     configurator.initReserves(initReserveInputs);
@@ -80,20 +83,9 @@ contract GhoListingPayload is IProposalGenericExecutor {
     configurator.setReserveBorrowing(GHO_TOKEN, true);
     configurator.setReserveFactor(GHO_TOKEN, GhoConstants.RESERVE_FACTOR);
 
-    // configurator.setSupplyCap(GHO_TOKEN, 0);
-
     configurator.setAssetEModeCategory(GHO_TOKEN, GhoConstants.EMODE_CATEGORY);
 
     configurator.setLiquidationProtocolFee(GHO_TOKEN, GhoConstants.LIQ_PROTOCOL_FEE);
     configurator.setReserveFlashLoaning(GHO_TOKEN, true);
-
-    // configurator.setDebtCeiling(GHO_TOKEN, DEBT_CEILING);
-
-    // configurator.configureReserveAsCollateral(
-    //   GHO_TOKEN,
-    //   LTV,
-    //   LIQUIDATION_THRESHOLD,
-    //   LIQUIDATION_BONUS
-    // );
   }
 }

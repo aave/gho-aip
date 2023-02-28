@@ -40,22 +40,3 @@ You can `download` the current contract code of a deployed contract via `make do
 You can `git-diff` a downloaded contract against your src via `make git-diff before=./etherscan/chain_address after=./src out=filename`. This command will diff the two folders via git patience algorithm and write the output to `diffs/filename.md`.
 
 **Caveat**: If the onchain implementation was verified using flatten, for generating the diff you need to flatten the new contract via `forge flatten` and supply the flattened file instead fo the whole `./src` folder.
-
-
-#### Deploying
-Deploy Oracle
-forge script scripts/DeployGhoOracle.s.sol:Deploy --fork-url https://rpc.tenderly.co/fork/09f4bf7f-0ba5-4152-8c2f-cee5fbf620f6 --broadcast -- --vvvv
-
-Deploy AToken
-forge script scripts/DeployGhoAToken.s.sol:Deploy --fork-url https://rpc.tenderly.co/fork/09f4bf7f-0ba5-4152-8c2f-cee5fbf620f6 --broadcast -- --vvvv
-
-Deploy GhoToken
-forge script scripts/DeployGhoToken.s.sol:Deploy --fork-url https://rpc.tenderly.co/fork/09f4bf7f-0ba5-4152-8c2f-cee5fbf620f6 --broadcast -- --vvvv
-
-
-Deploy GhoInterstStrategy
-forge script scripts/DeployGhoInterestStrategy.s.sol:Deploy --fork-url https://rpc.tenderly.co/fork/09f4bf7f-0ba5-4152-8c2f-cee5fbf620f6 --broadcast -- --vvvv
-
-
-Deploy GhoVariableDebtToken
-forge script scripts/DeployGhoVariableDebtToken.s.sol:Deploy --fork-url https://rpc.tenderly.co/fork/09f4bf7f-0ba5-4152-8c2f-cee5fbf620f6 --broadcast -- --vvvv
