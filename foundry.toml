@@ -16,6 +16,7 @@ polygon = "${RPC_POLYGON}"
 arbitrum = "${RPC_ARBITRUM}"
 fantom = "${RPC_FANTOM}"
 harmony = "${RPC_HARMONY}"
+goerli = "${RPC_GOERLI}"
 
 [etherscan]
 mainnet={key="${ETHERSCAN_API_KEY_MAINNET}",chainId=1}
