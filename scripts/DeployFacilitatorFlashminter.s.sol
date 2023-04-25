@@ -4,7 +4,8 @@ pragma solidity ^0.8.0;
 import {Script} from 'forge-std/Script.sol';
 
 import {AaveV3Ethereum} from 'aave-address-book/AaveV3Ethereum.sol';
-import {GhoFlashMinter} from 'gho-core/facilitators/flashMinter/GhoFlashMinter.sol';
+import {Helpers} from './Helpers.sol';
+import './Constants.sol';
 
 contract DeployFacilitatorFlashminter is Script {
   function run() external {
@@ -12,10 +13,7 @@ contract DeployFacilitatorFlashminter is Script {
 
     vm.startBroadcast(deployerPrivateKey);
 
-    address GHO_TOKEN = address(0);
-    uint256 FLASHMINT_FEE = 100;
-
-    GhoFlashMinter flashMinter = new GhoFlashMinter(
+    Helpers.deployFlashMinterFacilitator(
       GHO_TOKEN,
       address(AaveV3Ethereum.COLLECTOR),
       FLASHMINT_FEE,
