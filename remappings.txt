@@ -1,2 +1,4 @@
+openzeppelin-contracts/=lib/openzeppelin-contracts/
 @openzeppelin/=lib/openzeppelin-contracts/
-
+aave-stk-v1-5/=lib/aave-stk-v1-5/src/
+gho-core/=lib/gho-core/src/contracts/
