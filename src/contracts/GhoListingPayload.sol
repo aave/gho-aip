@@ -9,8 +9,6 @@ import {IGhoToken} from 'gho-core/gho/interfaces/IGhoToken.sol';
 import {IGhoAToken} from 'gho-core/facilitators/aave/tokens/interfaces/IGhoAToken.sol';
 import {IGhoVariableDebtToken} from 'gho-core/facilitators/aave/tokens/interfaces/IGhoVariableDebtToken.sol';
 
-import 'forge-std/console.sol';
-
 interface IProposalGenericExecutor {
   function execute() external;
 }
@@ -28,11 +26,11 @@ contract GhoListingPayload is IProposalGenericExecutor {
   string public constant VDTOKEN_SYMBOL = 'variableDebtEthGHO';
   string public constant SDTOKEN_NAME = 'Aave Ethereum Stable Debt GHO';
   string public constant SDTOKEN_SYMBOL = 'stableDebtEthGHO';
-  uint256 public constant RESERVE_FACTOR = 10_00; // 10.00%
   uint256 public constant LTV = 0;
   uint256 public constant LIQUIDATION_THRESHOLD = 0;
   uint256 public constant LIQUIDATION_BONUS = 0;
-  uint256 public constant LIQ_PROTOCOL_FEE = 10_00; // 10.00%
+  uint256 public constant LIQ_PROTOCOL_FEE = 0;
+  uint256 public constant RESERVE_FACTOR = 0;
   uint256 public constant DEBT_CEILING = 0;
 
   address public constant STK_AAVE = 0x4da27a545c0c5B758a6BA100e3a049001de870f5;
@@ -106,10 +104,6 @@ contract GhoListingPayload is IProposalGenericExecutor {
 
     AaveV3Ethereum.POOL_CONFIGURATOR.setReserveBorrowing(GHO_TOKEN, true);
 
-    AaveV3Ethereum.POOL_CONFIGURATOR.setReserveFactor(GHO_TOKEN, RESERVE_FACTOR);
-
-    AaveV3Ethereum.POOL_CONFIGURATOR.setLiquidationProtocolFee(GHO_TOKEN, LIQ_PROTOCOL_FEE);
-
     // ------------------------------------------------
     // 3. Configuration of GhoAToken and GhoDebtToken
     // ------------------------------------------------
@@ -131,9 +125,9 @@ contract GhoListingPayload is IProposalGenericExecutor {
     // ------------------------------------------------
     // 4. Configuration of STKAAVE Hook
     // ------------------------------------------------
-    // IStakedAaveV3(STK_AAVE).setGHODebtToken(
-    //   IGhoVariableDebtTokenTransferHook(ghoVariableDebtTokenAddress)
-    // );
+    IStakedAaveV3(STK_AAVE).setGHODebtToken(
+      IGhoVariableDebtTokenTransferHook(ghoVariableDebtTokenAddress)
+    );
 
     // ------------------------------------------------
     // 5. Registration of AaveFacilitator
