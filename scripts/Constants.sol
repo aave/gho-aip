@@ -8,5 +8,5 @@ address constant GHO_STABLE_DEBT_TOKEN = address(1);
 address constant GHO_INTEREST_RATE_STRATEGY = address(1);
 address constant GHO_DISCOUNT_RATE_STRATEGY = address(1);
 
-uint256 constant VARIABLE_BORROW_RATE = 0.025e27; // 2.50%
+uint256 constant VARIABLE_BORROW_RATE = 0.015e27; // 1.50%
 uint256 constant FLASHMINT_FEE = 100; // 1.00%
