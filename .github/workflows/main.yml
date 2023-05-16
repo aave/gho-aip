@@ -1,6 +1,10 @@
-name: foundry-test
+name: Main workflow
 
 on:
+  pull_request:
+  push:
+    branches:
+      - main
   workflow_call:
     inputs:
       testCommand:
