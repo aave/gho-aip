@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       testCommand:
-        default: 'forge test -vv'
+        default: 'forge test -vv --ffi'
         description: 'the command responsible for running the test'
         type: string
         required: false
