@@ -5,7 +5,7 @@ import {AaveV3Ethereum} from 'aave-address-book/AaveV3Ethereum.sol';
 import {ConfiguratorInputTypes} from 'aave-address-book/AaveV3.sol';
 import {IStakedAaveV3} from 'aave-stk-v1-5/interfaces/IStakedAaveV3.sol';
 import {IGhoVariableDebtTokenTransferHook} from 'aave-stk-v1-5/interfaces/IGhoVariableDebtTokenTransferHook.sol';
-import {IGhoToken} from 'gho-core/gho/interfaces/IGhoToken.sol';
+import {GhoToken} from 'gho-core/gho/GhoToken.sol';
 import {IGhoAToken} from 'gho-core/facilitators/aave/tokens/interfaces/IGhoAToken.sol';
 import {IGhoVariableDebtToken} from 'gho-core/facilitators/aave/tokens/interfaces/IGhoVariableDebtToken.sol';
 
@@ -14,6 +14,9 @@ interface IProposalGenericExecutor {
 }
 
 contract GhoListingPayload is IProposalGenericExecutor {
+  bytes32 public constant FACILITATOR_MANAGER = keccak256('FACILITATOR_MANAGER');
+  bytes32 public constant BUCKET_MANAGER = keccak256('BUCKET_MANAGER');
+
   string public constant FACILITATOR_AAVE_LABEL = 'Aave Ethereum V3 Pool';
   uint128 public constant FACILITATOR_AAVE_BUCKET_CAPACITY = 50_000_000 * 1e18;
   string public constant FACILITATOR_FLASHMINTER_LABEL = 'GHO FlashMinter';
@@ -67,7 +70,13 @@ contract GhoListingPayload is IProposalGenericExecutor {
 
   function execute() external override {
     // ------------------------------------------------
-    // 1. Setting oracle for GHO
+    // 1. Grant roles to SHORT EXECUTOR
+    // ------------------------------------------------
+    GhoToken(GHO_TOKEN).grantRole(FACILITATOR_MANAGER, address(this));
+    GhoToken(GHO_TOKEN).grantRole(BUCKET_MANAGER, address(this));
+
+    // ------------------------------------------------
+    // 2. Setting oracle for GHO
     // ------------------------------------------------
     address[] memory assets = new address[](1);
     assets[0] = GHO_TOKEN;
@@ -77,7 +86,7 @@ contract GhoListingPayload is IProposalGenericExecutor {
     AaveV3Ethereum.ORACLE.setAssetSources(assets, sources);
 
     // ------------------------------------------------
-    // 2. Listing of GHO as borrowable asset
+    // 3. Listing of GHO as borrowable asset
     // ------------------------------------------------
     ConfiguratorInputTypes.InitReserveInput[]
       memory initReserveInputs = new ConfiguratorInputTypes.InitReserveInput[](1);
@@ -105,7 +114,7 @@ contract GhoListingPayload is IProposalGenericExecutor {
     AaveV3Ethereum.POOL_CONFIGURATOR.setReserveBorrowing(GHO_TOKEN, true);
 
     // ------------------------------------------------
-    // 3. Configuration of GhoAToken and GhoDebtToken
+    // 4. Configuration of GhoAToken and GhoDebtToken
     // ------------------------------------------------
     (address ghoATokenAddress, , address ghoVariableDebtTokenAddress) = AaveV3Ethereum
       .AAVE_PROTOCOL_DATA_PROVIDER
@@ -123,25 +132,25 @@ contract GhoListingPayload is IProposalGenericExecutor {
     IGhoVariableDebtToken(ghoVariableDebtTokenAddress).updateDiscountToken(STK_AAVE);
 
     // ------------------------------------------------
-    // 4. Configuration of STKAAVE Hook
+    // 5. Configuration of STKAAVE Hook
     // ------------------------------------------------
     IStakedAaveV3(STK_AAVE).setGHODebtToken(
       IGhoVariableDebtTokenTransferHook(ghoVariableDebtTokenAddress)
     );
 
     // ------------------------------------------------
-    // 5. Registration of AaveFacilitator
+    // 6. Registration of AaveFacilitator
     // ------------------------------------------------
-    IGhoToken(GHO_TOKEN).addFacilitator(
+    GhoToken(GHO_TOKEN).addFacilitator(
       ghoATokenAddress,
       FACILITATOR_AAVE_LABEL,
       FACILITATOR_AAVE_BUCKET_CAPACITY
     );
 
     // ------------------------------------------------
-    // 6. Registration of FlashMinter
+    // 7. Registration of FlashMinter
     // ------------------------------------------------
-    IGhoToken(GHO_TOKEN).addFacilitator(
+    GhoToken(GHO_TOKEN).addFacilitator(
       GHO_FLASHMINTER,
       FACILITATOR_FLASHMINTER_LABEL,
       FACILITATOR_FLASHMINTER_BUCKET_CAPACITY

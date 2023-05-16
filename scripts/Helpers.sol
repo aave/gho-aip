@@ -17,8 +17,7 @@ import {GhoListingPayload} from '../src/contracts/GhoListingPayload.sol';
 
 library Helpers {
   function deployGhoToken(address owner) internal returns (address) {
-    GhoToken gho = new GhoToken();
-    gho.transferOwnership(owner);
+    GhoToken gho = new GhoToken(owner);
     return address(gho);
   }
 
