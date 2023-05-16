@@ -16,7 +16,7 @@
 [submodule "lib/gho-core"]
 	path = lib/gho-core
 	url = https://github.com/aave/gho-core
-	branch = 15a1685
+	branch = a834938
 [submodule "lib/aave-v3-core"]
 	path = lib/aave-v3-core
 	url = https://github.com/aave/aave-v3-core
