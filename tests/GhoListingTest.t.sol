@@ -183,7 +183,6 @@ contract GhoListingTest is ProtocolV3TestBase {
     // queue
     vm.roll(endBlock + 1);
     GovHelper._queue(proposalId);
-    vm.stopPrank();
 
     // get ready to execute
     (, , uint256 executionTime) = GovHelper._getProposal(proposalId);
@@ -290,7 +289,6 @@ contract GhoListingTest is ProtocolV3TestBase {
     // Stable borrow is deactivated
     vm.expectRevert(bytes(Errors.STABLE_BORROWING_NOT_ENABLED));
     this._borrow(ghoConfig, AaveV3Ethereum.POOL, ALICE, 1e18, true);
-    vm.stopPrank();
 
     // Alice borrows as much GHO as they can
     uint256 wethPrice = AaveV3Ethereum.ORACLE.getAssetPrice(wethConfig.underlying);
@@ -310,7 +308,6 @@ contract GhoListingTest is ProtocolV3TestBase {
     // Revert if borrowing more than borrowing power
     vm.expectRevert(bytes(Errors.COLLATERAL_CANNOT_COVER_NEW_BORROW));
     this._borrow(ghoConfig, AaveV3Ethereum.POOL, ALICE, 1e18, false);
-    vm.stopPrank();
 
     // Time flies (1500 blocks, with 12s blocktime)
     vm.warp(block.timestamp + 18000000);
