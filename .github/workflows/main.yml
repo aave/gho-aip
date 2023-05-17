@@ -1,11 +1,12 @@
-name: Workflow on PR/Push Trigger
+name: Main workflow
 
 on:
-    pull_request:
-    push:
-      branches:
-        - main
+  pull_request:
+  push:
+    branches:
+      - main
 
 jobs:
-    test:
-        uses: ./.github/workflows/reusable.yml
+  test:
+    uses: ./.github/workflows/foundry-test.yml
+    secrets: inherit
