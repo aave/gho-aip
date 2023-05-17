@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import {Script} from 'forge-std/Script.sol';
 
+import {AaveGovernanceV2} from 'aave-address-book/AaveGovernanceV2.sol';
 import {Helpers} from './Helpers.sol';
 import './Constants.sol';
 
@@ -13,7 +14,7 @@ contract DeployGhoToken is Script {
 
     vm.startBroadcast(deployerPrivateKey);
 
-    Helpers.deployGhoToken(GHO_TOKEN_OWNER);
+    Helpers.deployGhoToken(AaveGovernanceV2.SHORT_EXECUTOR);
 
     vm.stopBroadcast();
   }
