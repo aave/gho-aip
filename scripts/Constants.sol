@@ -1,4 +1,3 @@
-address constant GHO_TOKEN_OWNER = 0xEE56e2B3D491590B5b31738cC34d5232F378a8D5; // SHORT EXECUTOR
 address constant GHO_TOKEN = address(1);
 address constant GHO_FLASHMINTER = address(1);
 address constant GHO_ORACLE = address(1);
