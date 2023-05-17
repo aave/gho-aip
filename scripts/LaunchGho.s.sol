@@ -9,7 +9,7 @@ import {GhoListingPayload} from '../src/contracts/GhoListingPayload.sol';
 import {Helpers} from './Helpers.sol';
 import './Constants.sol';
 
-contract LaunchGhoFork is Script {
+contract LaunchGho is Script {
   function run() external {
     uint256 deployerPrivateKey = vm.envUint('PRIVATE_KEY');
     address deployerAddress = vm.addr(deployerPrivateKey);
