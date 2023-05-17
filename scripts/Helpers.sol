@@ -28,12 +28,10 @@ library Helpers {
     address ghoStableDebtToken;
     address ghoInterestRateStrategy;
     address ghoDiscountRateStrategy;
-    address ghoUiGhoDataProvider;
   }
 
   function deployAaveFacilitator(
     address pool,
-    address ghoToken,
     uint256 ghoInterestRate
   ) internal returns (AaveFacilitatorData memory) {
     GhoOracle ghoOracle = new GhoOracle();
@@ -70,10 +68,6 @@ library Helpers {
     );
     GhoInterestRateStrategy ghoInterestRateStrategy = new GhoInterestRateStrategy(ghoInterestRate);
     GhoDiscountRateStrategy ghoDiscountRateStrategy = new GhoDiscountRateStrategy();
-    UiGhoDataProvider ghoUiGhoDataProvider = new UiGhoDataProvider(
-      IPool(pool),
-      IGhoToken(ghoToken)
-    );
 
     return
       AaveFacilitatorData({
@@ -82,8 +76,7 @@ library Helpers {
         ghoVariableDebtToken: address(ghoVariableDebtToken),
         ghoStableDebtToken: address(ghoStableDebtToken),
         ghoInterestRateStrategy: address(ghoInterestRateStrategy),
-        ghoDiscountRateStrategy: address(ghoDiscountRateStrategy),
-        ghoUiGhoDataProvider: address(ghoUiGhoDataProvider)
+        ghoDiscountRateStrategy: address(ghoDiscountRateStrategy)
       });
   }
 
@@ -102,9 +95,15 @@ library Helpers {
     return address(flashMinter);
   }
 
+  function deployGhoUiDataProvider(address pool, address ghoToken) internal returns (address) {
+    UiGhoDataProvider ghoUiGhoDataProvider = new UiGhoDataProvider(
+      IPool(pool),
+      IGhoToken(ghoToken)
+    );
+    return address(ghoUiGhoDataProvider);
+  }
+
   function deployListingPayload(
-    address ghoToken,
-    address ghoFlashMinter,
     address ghoOracle,
     address ghoAToken,
     address ghoVariableDebtToken,
@@ -113,8 +112,6 @@ library Helpers {
     address ghoDiscountRateStrategy
   ) internal returns (address) {
     GhoListingPayload payload = new GhoListingPayload(
-      ghoToken,
-      ghoFlashMinter,
       ghoOracle,
       ghoAToken,
       ghoVariableDebtToken,

@@ -13,7 +13,7 @@ contract DeployFacilitatorAave is Script {
 
     vm.startBroadcast(deployerPrivateKey);
 
-    Helpers.deployAaveFacilitator(address(AaveV3Ethereum.POOL), GHO_TOKEN, VARIABLE_BORROW_RATE);
+    Helpers.deployAaveFacilitator(address(AaveV3Ethereum.POOL), VARIABLE_BORROW_RATE);
 
     vm.stopBroadcast();
   }

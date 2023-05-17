@@ -39,21 +39,14 @@ contract GhoListingTest is ProtocolV3TestBase {
   bytes32 public constant FACILITATOR_MANAGER = keccak256('FACILITATOR_MANAGER');
   bytes32 public constant BUCKET_MANAGER = keccak256('BUCKET_MANAGER');
 
+  address public GHO_TOKEN;
+  address public GHO_FLASHMINTER;
 
   function testListingComplete() public {
     vm.createSelectFork(vm.rpcUrl('mainnet'), STKAAVE_UPGRADE_BLOCK_NUMBER);
     GhoToken ghoToken = new GhoToken(AaveGovernanceV2.SHORT_EXECUTOR);
 
     GhoListingPayload payload = new GhoListingPayload(
-      address(ghoToken),
-      address(
-        new GhoFlashMinter(
-          address(ghoToken),
-          AaveV3Ethereum.COLLECTOR,
-          1_00,
-          address(AaveV3Ethereum.POOL_ADDRESSES_PROVIDER)
-        )
-      ),
       address(new GhoOracle()),
       address(new GhoAToken(IPool(address(AaveV3Ethereum.POOL)))),
       address(new GhoVariableDebtToken(IPool(address(AaveV3Ethereum.POOL)))),
@@ -61,6 +54,8 @@ contract GhoListingTest is ProtocolV3TestBase {
       address(new GhoInterestRateStrategy(0.0250e27)), // 2.5% in ray
       address(new GhoDiscountRateStrategy())
     );
+    GHO_TOKEN = payload.precomputeGhoTokenAddress();
+    GHO_FLASHMINTER = payload.precomputeGhoFlashMinterAddress();
 
     // Simulate stkAave upgrade
     uint256 upgradeProposalId = _passProposal(
@@ -109,7 +104,7 @@ contract GhoListingTest is ProtocolV3TestBase {
 
     ReserveConfig memory expectedAssetConfig = ReserveConfig({
       symbol: 'GHO',
-      underlying: payload.GHO_TOKEN(),
+      underlying: GHO_TOKEN,
       aToken: address(0), // Mock, as they don't get validated, because of the "dynamic" deployment on proposal execution
       variableDebtToken: address(0), // Mock, as they don't get validated, because of the "dynamic" deployment on proposal execution
       stableDebtToken: address(0), // Mock, as they don't get validated, because of the "dynamic" deployment on proposal execution
@@ -150,7 +145,7 @@ contract GhoListingTest is ProtocolV3TestBase {
 
     _validateAssetSourceOnOracle(
       AaveV3Ethereum.POOL_ADDRESSES_PROVIDER,
-      payload.GHO_TOKEN(),
+      GHO_TOKEN,
       payload.GHO_ORACLE()
     );
 
@@ -180,7 +175,6 @@ contract GhoListingTest is ProtocolV3TestBase {
     // queue
     vm.roll(endBlock + 1);
     GovHelper._queue(proposalId);
-    vm.stopPrank();
 
     // get ready to execute
     (, , uint256 executionTime) = GovHelper._getProposal(proposalId);
@@ -191,18 +185,18 @@ contract GhoListingTest is ProtocolV3TestBase {
 
   function _validateGhoConfigurationPostProposal(GhoListingPayload payload) internal {
     // GHO
-    assertEq(IGhoToken(payload.GHO_TOKEN()).totalSupply(), 0);
-    assertTrue(GhoToken(payload.GHO_TOKEN()).hasRole(DEFAULT_ADMIN_ROLE, AaveGovernanceV2.SHORT_EXECUTOR));
+    assertEq(IGhoToken(GHO_TOKEN).totalSupply(), 0);
+    assertTrue(GhoToken(GHO_TOKEN).hasRole(DEFAULT_ADMIN_ROLE, AaveGovernanceV2.SHORT_EXECUTOR));
 
     // Facilitators
-    assertEq(IGhoToken(payload.GHO_TOKEN()).getFacilitatorsList().length, 2);
+    assertEq(IGhoToken(GHO_TOKEN).getFacilitatorsList().length, 2);
 
     // Aave Facilitator
     (address ghoATokenAddress, , address ghoVariableDebtTokenAddress) = AaveV3Ethereum
       .AAVE_PROTOCOL_DATA_PROVIDER
-      .getReserveTokensAddresses(payload.GHO_TOKEN());
+      .getReserveTokensAddresses(GHO_TOKEN);
 
-    (uint256 aaveCapacity, uint256 aaveLevel) = IGhoToken(payload.GHO_TOKEN()).getFacilitatorBucket(
+    (uint256 aaveCapacity, uint256 aaveLevel) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(
       ghoATokenAddress
     );
     assertEq(aaveCapacity, payload.FACILITATOR_AAVE_BUCKET_CAPACITY());
@@ -221,12 +215,12 @@ contract GhoListingTest is ProtocolV3TestBase {
     assertEq(IGhoVariableDebtToken(ghoVariableDebtTokenAddress).getDiscountToken(), STKAAVE);
 
     // GhoOracle
-    assertEq(AaveV3Ethereum.ORACLE.getSourceOfAsset(payload.GHO_TOKEN()), payload.GHO_ORACLE());
-    assertEq(AaveV3Ethereum.ORACLE.getAssetPrice(payload.GHO_TOKEN()), 1e8);
+    assertEq(AaveV3Ethereum.ORACLE.getSourceOfAsset(GHO_TOKEN), payload.GHO_ORACLE());
+    assertEq(AaveV3Ethereum.ORACLE.getAssetPrice(GHO_TOKEN), 1e8);
 
     // FlashMinter
-    (uint256 flashMinterCapacity, uint256 flashMinterLevel) = IGhoToken(payload.GHO_TOKEN())
-      .getFacilitatorBucket(payload.GHO_FLASHMINTER());
+    (uint256 flashMinterCapacity, uint256 flashMinterLevel) = IGhoToken(GHO_TOKEN)
+      .getFacilitatorBucket(GHO_FLASHMINTER);
     assertEq(flashMinterCapacity, payload.FACILITATOR_FLASHMINTER_BUCKET_CAPACITY());
     assertEq(flashMinterLevel, 0);
 
