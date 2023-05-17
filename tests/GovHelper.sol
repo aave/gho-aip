@@ -14,7 +14,7 @@ library GovHelper {
 
   function _getProposal(
     uint256 proposalId
-  ) internal returns (uint256 startBlock, uint256 endBlock, uint256 executionTime) {
+  ) internal view returns (uint256 startBlock, uint256 endBlock, uint256 executionTime) {
     IAaveGovernanceV2.ProposalWithoutVotes memory proposal = AaveGovernanceV2.GOV.getProposalById(
       proposalId
     );

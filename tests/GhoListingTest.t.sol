@@ -303,7 +303,7 @@ contract GhoListingTest is ProtocolV3TestBase {
     DataTypes.ReserveData memory reserveData = IPool(address(AaveV3Ethereum.POOL)).getReserveData(
       ghoConfig.underlying
     );
-    assertEq(reserveData.currentVariableBorrowRate, VARIABLE_BORROW_RATE); 
+    assertEq(reserveData.currentVariableBorrowRate, VARIABLE_BORROW_RATE);
 
     // Revert if borrowing more than borrowing power
     vm.expectRevert(bytes(Errors.COLLATERAL_CANNOT_COVER_NEW_BORROW));
@@ -361,7 +361,7 @@ contract GhoListingTest is ProtocolV3TestBase {
     address ghoVariableDebtTokenAddress,
     uint256 debtBalance,
     uint256 discountTokenBalance
-  ) internal returns (uint256) {
+  ) internal view returns (uint256) {
     address ghoDiscountRateStrategy = IGhoVariableDebtToken(ghoVariableDebtTokenAddress)
       .getDiscountRateStrategy();
 
