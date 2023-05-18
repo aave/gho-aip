@@ -44,12 +44,6 @@ contract GhoListingPayload is IProposalGenericExecutor {
   string public constant VDTOKEN_SYMBOL = 'variableDebtEthGHO';
   string public constant SDTOKEN_NAME = 'Aave Ethereum Stable Debt GHO';
   string public constant SDTOKEN_SYMBOL = 'stableDebtEthGHO';
-  uint256 public constant LTV = 0;
-  uint256 public constant LIQUIDATION_THRESHOLD = 0;
-  uint256 public constant LIQUIDATION_BONUS = 0;
-  uint256 public constant LIQ_PROTOCOL_FEE = 0;
-  uint256 public constant RESERVE_FACTOR = 0;
-  uint256 public constant DEBT_CEILING = 0;
 
   address public immutable GHO_ORACLE;
   address public immutable GHO_ATOKEN_IMPL;

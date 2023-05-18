@@ -116,11 +116,11 @@ contract GhoListingTest is ProtocolV3TestBase {
       variableDebtToken: address(0), // Mock, as they don't get validated, because of the "dynamic" deployment on proposal execution
       stableDebtToken: address(0), // Mock, as they don't get validated, because of the "dynamic" deployment on proposal execution
       decimals: payload.GHO_DECIMALS(),
-      ltv: payload.LTV(),
-      liquidationThreshold: payload.LIQUIDATION_THRESHOLD(),
-      liquidationBonus: payload.LIQUIDATION_BONUS(),
-      liquidationProtocolFee: payload.LIQ_PROTOCOL_FEE(),
-      reserveFactor: payload.RESERVE_FACTOR(),
+      ltv: LTV,
+      liquidationThreshold: LIQUIDATION_THRESHOLD,
+      liquidationBonus: LIQUIDATION_BONUS,
+      liquidationProtocolFee: LIQ_PROTOCOL_FEE,
+      reserveFactor: RESERVE_FACTOR,
       usageAsCollateralEnabled: false,
       borrowingEnabled: true,
       interestRateStrategy: _findReserveConfigBySymbol(allConfigsAfter, 'GHO').interestRateStrategy,
@@ -132,7 +132,7 @@ contract GhoListingTest is ProtocolV3TestBase {
       isFlashloanable: false,
       supplyCap: 0,
       borrowCap: 0,
-      debtCeiling: payload.DEBT_CEILING(),
+      debtCeiling: DEBT_CEILING,
       eModeCategory: 0
     });
 
