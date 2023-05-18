@@ -26,6 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FOUNDRY_PROFILE: ci
+      NO_COLOR: 1
     steps:
       - uses: actions/checkout@v3
         with:
@@ -60,7 +61,7 @@ jobs:
       - name: Instal sub-dependencies
         run: |
           cd lib/gho-core
-          npm i
+          npm ci
           cd ../..
 
       - name: Run Forge build
