@@ -77,7 +77,7 @@ contract GhoListingTest is ProtocolV3TestBase {
     _testListing(address(payload), listingProposalId);
   }
 
-  function __testListingWithPayload() public {
+  function _testListingWithPayload() public {
     vm.createSelectFork(vm.rpcUrl('mainnet'), STKAAVE_UPGRADE_BLOCK_NUMBER);
     address GHO_AIP = address(0); // TODO
 
