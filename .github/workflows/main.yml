@@ -5,8 +5,8 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:
 
 jobs:
   test:
-    uses: bgd-labs/github-workflows/.github/workflows/foundry-test.yml@main
+    uses: ./.github/workflows/foundry-test.yml
+    secrets: inherit

@@ -20,11 +20,14 @@ import {GhoInterestRateStrategy} from 'gho-core/facilitators/aave/interestStrate
 import {GhoDiscountRateStrategy} from 'gho-core/facilitators/aave/interestStrategy/GhoDiscountRateStrategy.sol';
 import {AggregatedStakedAaveV3} from 'aave-stk-v1-5/interfaces/AggregatedStakedAaveV3.sol';
 import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
+import {DataTypes} from '@aave/core-v3/contracts/protocol/libraries/types/DataTypes.sol';
 import {Errors} from '@aave/core-v3/contracts/protocol/libraries/helpers/Errors.sol';
 import {WadRayMath} from '@aave/core-v3/contracts/protocol/libraries/math/WadRayMath.sol';
 
 import {GovHelper} from './GovHelper.sol';
 import {GhoListingPayload} from '../src/contracts/GhoListingPayload.sol';
+import {Helpers} from '../scripts/Helpers.sol';
+import '../scripts/Constants.sol';
 
 contract GhoListingTest is ProtocolV3TestBase {
   using stdStorage for StdStorage;
@@ -37,25 +40,29 @@ contract GhoListingTest is ProtocolV3TestBase {
 
   function testListingComplete() public {
     vm.createSelectFork(vm.rpcUrl('mainnet'), STKAAVE_UPGRADE_BLOCK_NUMBER);
-    GhoToken ghoToken = new GhoToken();
-    ghoToken.transferOwnership(AaveGovernanceV2.SHORT_EXECUTOR);
 
-    GhoListingPayload payload = new GhoListingPayload(
-      address(ghoToken),
-      address(
-        new GhoFlashMinter(
-          address(ghoToken),
-          AaveV3Ethereum.COLLECTOR,
-          1_00,
-          address(AaveV3Ethereum.POOL_ADDRESSES_PROVIDER)
-        )
-      ),
-      address(new GhoOracle()),
-      address(new GhoAToken(IPool(address(AaveV3Ethereum.POOL)))),
-      address(new GhoVariableDebtToken(IPool(address(AaveV3Ethereum.POOL)))),
-      address(new GhoStableDebtToken(IPool(address(AaveV3Ethereum.POOL)))),
-      address(new GhoInterestRateStrategy(0.0250e27)), // 2.5% in ray
-      address(new GhoDiscountRateStrategy())
+    address ghoToken = Helpers.deployGhoToken(AaveGovernanceV2.SHORT_EXECUTOR);
+    Helpers.AaveFacilitatorData memory aaveData = Helpers.deployAaveFacilitator(
+      address(AaveV3Ethereum.POOL),
+      ghoToken,
+      VARIABLE_BORROW_RATE
+    );
+    address flashminter = Helpers.deployFlashMinterFacilitator(
+      ghoToken,
+      address(AaveV3Ethereum.COLLECTOR),
+      FLASHMINT_FEE,
+      address(AaveV3Ethereum.POOL_ADDRESSES_PROVIDER)
+    );
+
+    address payload = Helpers.deployListingPayload(
+      ghoToken,
+      flashminter,
+      aaveData.ghoOracle,
+      aaveData.ghoAToken,
+      aaveData.ghoVariableDebtToken,
+      aaveData.ghoStableDebtToken,
+      aaveData.ghoInterestRateStrategy,
+      aaveData.ghoDiscountRateStrategy
     );
 
     // Simulate stkAave upgrade
@@ -71,7 +78,7 @@ contract GhoListingTest is ProtocolV3TestBase {
     _testListing(address(payload), listingProposalId);
   }
 
-  function testListingWithPayload() public {
+  function _testListingWithPayload() public {
     vm.createSelectFork(vm.rpcUrl('mainnet'), STKAAVE_UPGRADE_BLOCK_NUMBER);
     address GHO_AIP = address(0); // TODO
 
@@ -176,7 +183,6 @@ contract GhoListingTest is ProtocolV3TestBase {
     // queue
     vm.roll(endBlock + 1);
     GovHelper._queue(proposalId);
-    vm.stopPrank();
 
     // get ready to execute
     (, , uint256 executionTime) = GovHelper._getProposal(proposalId);
@@ -198,11 +204,30 @@ contract GhoListingTest is ProtocolV3TestBase {
       .AAVE_PROTOCOL_DATA_PROVIDER
       .getReserveTokensAddresses(payload.GHO_TOKEN());
 
-    (uint256 aaveCapacity, uint256 aaveLevel) = IGhoToken(payload.GHO_TOKEN()).getFacilitatorBucket(
+    IGhoToken.Facilitator memory aaveFacilitator = IGhoToken(payload.GHO_TOKEN()).getFacilitator(
       ghoATokenAddress
     );
-    assertEq(aaveCapacity, payload.FACILITATOR_AAVE_BUCKET_CAPACITY());
-    assertEq(aaveLevel, 0);
+    assertEq(aaveFacilitator.label, payload.FACILITATOR_AAVE_LABEL());
+    assertEq(aaveFacilitator.bucketCapacity, payload.FACILITATOR_AAVE_BUCKET_CAPACITY());
+    assertEq(aaveFacilitator.bucketCapacity, FACILITATOR_AAVE_BUCKET_CAPACITY);
+    assertEq(aaveFacilitator.bucketLevel, 0);
+    // Reserve params
+    DataTypes.ReserveData memory reserveData = IPool(address(AaveV3Ethereum.POOL)).getReserveData(
+      payload.GHO_TOKEN()
+    );
+    assertEq(reserveData.currentLiquidityRate, 0);
+    assertEq(reserveData.currentVariableBorrowRate, 0); // 0 until first interaction
+    assertEq(reserveData.currentStableBorrowRate, 0);
+
+    // IR params
+    assertEq(payload.GHO_INTEREST_RATE_STRATEGY(), reserveData.interestRateStrategyAddress);
+    DataTypes.CalculateInterestRatesParams memory emptyParams;
+    (uint256 liqRate, uint256 stableRate, uint256 varRate) = GhoInterestRateStrategy(
+      reserveData.interestRateStrategyAddress
+    ).calculateInterestRates(emptyParams);
+    assertEq(liqRate, 0);
+    assertEq(stableRate, 0);
+    assertEq(varRate, VARIABLE_BORROW_RATE);
 
     // GhoAToken config
     assertEq(IGhoAToken(ghoATokenAddress).getVariableDebtToken(), ghoVariableDebtTokenAddress);
@@ -210,21 +235,42 @@ contract GhoListingTest is ProtocolV3TestBase {
 
     // GhoVariableDebtToken config
     assertEq(IGhoVariableDebtToken(ghoVariableDebtTokenAddress).getAToken(), ghoATokenAddress);
-    assertEq(
-      IGhoVariableDebtToken(ghoVariableDebtTokenAddress).getDiscountRateStrategy(),
-      payload.GHO_DISCOUNT_RATE_STRATEGY()
-    );
+    address discountRateStrategyAddress = IGhoVariableDebtToken(ghoVariableDebtTokenAddress)
+      .getDiscountRateStrategy();
+    assertEq(discountRateStrategyAddress, payload.GHO_DISCOUNT_RATE_STRATEGY());
     assertEq(IGhoVariableDebtToken(ghoVariableDebtTokenAddress).getDiscountToken(), STKAAVE);
+
+    // DiscountRateStrategy
+    assertEq(GhoDiscountRateStrategy(discountRateStrategyAddress).DISCOUNT_RATE(), DISCOUNT_RATE);
+    assertEq(
+      GhoDiscountRateStrategy(discountRateStrategyAddress).GHO_DISCOUNTED_PER_DISCOUNT_TOKEN(),
+      GHO_DISCOUNTED_PER_DISCOUNT_TOKEN
+    );
+    assertEq(
+      GhoDiscountRateStrategy(discountRateStrategyAddress).MIN_DISCOUNT_TOKEN_BALANCE(),
+      MIN_DISCOUNT_TOKEN_BALANCE
+    );
+    assertEq(
+      GhoDiscountRateStrategy(discountRateStrategyAddress).MIN_DEBT_TOKEN_BALANCE(),
+      MIN_DEBT_TOKEN_BALANCE
+    );
 
     // GhoOracle
     assertEq(AaveV3Ethereum.ORACLE.getSourceOfAsset(payload.GHO_TOKEN()), payload.GHO_ORACLE());
     assertEq(AaveV3Ethereum.ORACLE.getAssetPrice(payload.GHO_TOKEN()), 1e8);
 
     // FlashMinter
-    (uint256 flashMinterCapacity, uint256 flashMinterLevel) = IGhoToken(payload.GHO_TOKEN())
-      .getFacilitatorBucket(payload.GHO_FLASHMINTER());
-    assertEq(flashMinterCapacity, payload.FACILITATOR_FLASHMINTER_BUCKET_CAPACITY());
-    assertEq(flashMinterLevel, 0);
+    IGhoToken.Facilitator memory flashminterFacilitator = IGhoToken(payload.GHO_TOKEN())
+      .getFacilitator(payload.GHO_FLASHMINTER());
+    assertEq(flashminterFacilitator.label, FACILITATOR_FLASHMINTER_LABEL);
+    assertEq(flashminterFacilitator.bucketCapacity, FACILITATOR_FLASHMINTER_BUCKET_CAPACITY);
+    assertEq(
+      flashminterFacilitator.bucketCapacity,
+      payload.FACILITATOR_FLASHMINTER_BUCKET_CAPACITY()
+    );
+    assertEq(flashminterFacilitator.bucketLevel, 0);
+    // FlashMinter params
+    assertEq(GhoFlashMinter(payload.GHO_FLASHMINTER()).getFee(), 0);
 
     // StkAAVE
     assertEq(AggregatedStakedAaveV3(STKAAVE).ghoDebtToken(), ghoVariableDebtTokenAddress);
@@ -243,7 +289,6 @@ contract GhoListingTest is ProtocolV3TestBase {
     // Stable borrow is deactivated
     vm.expectRevert(bytes(Errors.STABLE_BORROWING_NOT_ENABLED));
     this._borrow(ghoConfig, AaveV3Ethereum.POOL, ALICE, 1e18, true);
-    vm.stopPrank();
 
     // Alice borrows as much GHO as they can
     uint256 wethPrice = AaveV3Ethereum.ORACLE.getAssetPrice(wethConfig.underlying);
@@ -255,10 +300,14 @@ contract GhoListingTest is ProtocolV3TestBase {
     (, , uint256 availableToBorrow, , , ) = AaveV3Ethereum.POOL.getUserAccountData(ALICE);
     assertEq(availableToBorrow, 0);
 
+    DataTypes.ReserveData memory reserveData = IPool(address(AaveV3Ethereum.POOL)).getReserveData(
+      ghoConfig.underlying
+    );
+    assertEq(reserveData.currentVariableBorrowRate, VARIABLE_BORROW_RATE);
+
     // Revert if borrowing more than borrowing power
     vm.expectRevert(bytes(Errors.COLLATERAL_CANNOT_COVER_NEW_BORROW));
     this._borrow(ghoConfig, AaveV3Ethereum.POOL, ALICE, 1e18, false);
-    vm.stopPrank();
 
     // Time flies (1500 blocks, with 12s blocktime)
     vm.warp(block.timestamp + 18000000);
@@ -312,7 +361,7 @@ contract GhoListingTest is ProtocolV3TestBase {
     address ghoVariableDebtTokenAddress,
     uint256 debtBalance,
     uint256 discountTokenBalance
-  ) internal returns (uint256) {
+  ) internal view returns (uint256) {
     address ghoDiscountRateStrategy = IGhoVariableDebtToken(ghoVariableDebtTokenAddress)
       .getDiscountRateStrategy();
 
