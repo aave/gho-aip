@@ -1,5 +1,3 @@
-address constant GHO_TOKEN = address(1);
-address constant GHO_FLASHMINTER = address(1);
 address constant GHO_ORACLE = address(1);
 address constant GHO_ATOKEN = address(1);
 address constant GHO_VARIABLE_DEBT_TOKEN = address(1);
