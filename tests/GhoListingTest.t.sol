@@ -38,25 +38,21 @@ contract GhoListingTest is ProtocolV3TestBase {
   address public constant STKAAVE_UPGRADE_PAYLOAD = 0xe427FCbD54169136391cfEDf68E96abB13dA87A0; // AIP#124
   uint256 public constant STKAAVE_UPGRADE_BLOCK_NUMBER = 17138206;
 
+  bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
+  bytes32 public constant FACILITATOR_MANAGER = keccak256('FACILITATOR_MANAGER');
+  bytes32 public constant BUCKET_MANAGER = keccak256('BUCKET_MANAGER');
+
+  address public GHO_TOKEN;
+  address public GHO_FLASHMINTER;
+
   function testListingComplete() public {
     vm.createSelectFork(vm.rpcUrl('mainnet'), STKAAVE_UPGRADE_BLOCK_NUMBER);
 
-    address ghoToken = Helpers.deployGhoToken(AaveGovernanceV2.SHORT_EXECUTOR);
     Helpers.AaveFacilitatorData memory aaveData = Helpers.deployAaveFacilitator(
       address(AaveV3Ethereum.POOL),
-      ghoToken,
       VARIABLE_BORROW_RATE
     );
-    address flashminter = Helpers.deployFlashMinterFacilitator(
-      ghoToken,
-      address(AaveV3Ethereum.COLLECTOR),
-      FLASHMINT_FEE,
-      address(AaveV3Ethereum.POOL_ADDRESSES_PROVIDER)
-    );
-
-    address payload = Helpers.deployListingPayload(
-      ghoToken,
-      flashminter,
+    address payloadAddress = Helpers.deployListingPayload(
       aaveData.ghoOracle,
       aaveData.ghoAToken,
       aaveData.ghoVariableDebtToken,
@@ -64,6 +60,9 @@ contract GhoListingTest is ProtocolV3TestBase {
       aaveData.ghoInterestRateStrategy,
       aaveData.ghoDiscountRateStrategy
     );
+    GhoListingPayload payload = GhoListingPayload(payloadAddress);
+    GHO_TOKEN = payload.precomputeGhoTokenAddress();
+    GHO_FLASHMINTER = payload.precomputeGhoFlashMinterAddress();
 
     // Simulate stkAave upgrade
     uint256 upgradeProposalId = _passProposal(
@@ -112,16 +111,16 @@ contract GhoListingTest is ProtocolV3TestBase {
 
     ReserveConfig memory expectedAssetConfig = ReserveConfig({
       symbol: 'GHO',
-      underlying: payload.GHO_TOKEN(),
+      underlying: GHO_TOKEN,
       aToken: address(0), // Mock, as they don't get validated, because of the "dynamic" deployment on proposal execution
       variableDebtToken: address(0), // Mock, as they don't get validated, because of the "dynamic" deployment on proposal execution
       stableDebtToken: address(0), // Mock, as they don't get validated, because of the "dynamic" deployment on proposal execution
       decimals: payload.GHO_DECIMALS(),
-      ltv: payload.LTV(),
-      liquidationThreshold: payload.LIQUIDATION_THRESHOLD(),
-      liquidationBonus: payload.LIQUIDATION_BONUS(),
-      liquidationProtocolFee: payload.LIQ_PROTOCOL_FEE(),
-      reserveFactor: payload.RESERVE_FACTOR(),
+      ltv: LTV,
+      liquidationThreshold: LIQUIDATION_THRESHOLD,
+      liquidationBonus: LIQUIDATION_BONUS,
+      liquidationProtocolFee: LIQ_PROTOCOL_FEE,
+      reserveFactor: RESERVE_FACTOR,
       usageAsCollateralEnabled: false,
       borrowingEnabled: true,
       interestRateStrategy: _findReserveConfigBySymbol(allConfigsAfter, 'GHO').interestRateStrategy,
@@ -133,7 +132,7 @@ contract GhoListingTest is ProtocolV3TestBase {
       isFlashloanable: false,
       supplyCap: 0,
       borrowCap: 0,
-      debtCeiling: payload.DEBT_CEILING(),
+      debtCeiling: DEBT_CEILING,
       eModeCategory: 0
     });
 
@@ -153,7 +152,7 @@ contract GhoListingTest is ProtocolV3TestBase {
 
     _validateAssetSourceOnOracle(
       AaveV3Ethereum.POOL_ADDRESSES_PROVIDER,
-      payload.GHO_TOKEN(),
+      GHO_TOKEN,
       payload.GHO_ORACLE()
     );
 
@@ -193,18 +192,18 @@ contract GhoListingTest is ProtocolV3TestBase {
 
   function _validateGhoConfigurationPostProposal(GhoListingPayload payload) internal {
     // GHO
-    assertEq(IGhoToken(payload.GHO_TOKEN()).totalSupply(), 0);
-    assertEq(GhoToken(payload.GHO_TOKEN()).owner(), AaveGovernanceV2.SHORT_EXECUTOR);
+    assertEq(IGhoToken(GHO_TOKEN).totalSupply(), 0);
+    assertTrue(GhoToken(GHO_TOKEN).hasRole(DEFAULT_ADMIN_ROLE, AaveGovernanceV2.SHORT_EXECUTOR));
 
     // Facilitators
-    assertEq(IGhoToken(payload.GHO_TOKEN()).getFacilitatorsList().length, 2);
+    assertEq(IGhoToken(GHO_TOKEN).getFacilitatorsList().length, 2);
 
     // Aave Facilitator
     (address ghoATokenAddress, , address ghoVariableDebtTokenAddress) = AaveV3Ethereum
       .AAVE_PROTOCOL_DATA_PROVIDER
-      .getReserveTokensAddresses(payload.GHO_TOKEN());
+      .getReserveTokensAddresses(GHO_TOKEN);
 
-    IGhoToken.Facilitator memory aaveFacilitator = IGhoToken(payload.GHO_TOKEN()).getFacilitator(
+    IGhoToken.Facilitator memory aaveFacilitator = IGhoToken(GHO_TOKEN).getFacilitator(
       ghoATokenAddress
     );
     assertEq(aaveFacilitator.label, payload.FACILITATOR_AAVE_LABEL());
@@ -213,7 +212,7 @@ contract GhoListingTest is ProtocolV3TestBase {
     assertEq(aaveFacilitator.bucketLevel, 0);
     // Reserve params
     DataTypes.ReserveData memory reserveData = IPool(address(AaveV3Ethereum.POOL)).getReserveData(
-      payload.GHO_TOKEN()
+      GHO_TOKEN
     );
     assertEq(reserveData.currentLiquidityRate, 0);
     assertEq(reserveData.currentVariableBorrowRate, 0); // 0 until first interaction
@@ -256,12 +255,13 @@ contract GhoListingTest is ProtocolV3TestBase {
     );
 
     // GhoOracle
-    assertEq(AaveV3Ethereum.ORACLE.getSourceOfAsset(payload.GHO_TOKEN()), payload.GHO_ORACLE());
-    assertEq(AaveV3Ethereum.ORACLE.getAssetPrice(payload.GHO_TOKEN()), 1e8);
+    assertEq(AaveV3Ethereum.ORACLE.getSourceOfAsset(GHO_TOKEN), payload.GHO_ORACLE());
+    assertEq(AaveV3Ethereum.ORACLE.getAssetPrice(GHO_TOKEN), 1e8);
 
     // FlashMinter
-    IGhoToken.Facilitator memory flashminterFacilitator = IGhoToken(payload.GHO_TOKEN())
-      .getFacilitator(payload.GHO_FLASHMINTER());
+    IGhoToken.Facilitator memory flashminterFacilitator = IGhoToken(GHO_TOKEN).getFacilitator(
+      GHO_FLASHMINTER
+    );
     assertEq(flashminterFacilitator.label, FACILITATOR_FLASHMINTER_LABEL);
     assertEq(flashminterFacilitator.bucketCapacity, FACILITATOR_FLASHMINTER_BUCKET_CAPACITY);
     assertEq(
@@ -270,7 +270,7 @@ contract GhoListingTest is ProtocolV3TestBase {
     );
     assertEq(flashminterFacilitator.bucketLevel, 0);
     // FlashMinter params
-    assertEq(GhoFlashMinter(payload.GHO_FLASHMINTER()).getFee(), 0);
+    assertEq(GhoFlashMinter(GHO_FLASHMINTER).getFee(), 0);
 
     // StkAAVE
     assertEq(AggregatedStakedAaveV3(STKAAVE).ghoDebtToken(), ghoVariableDebtTokenAddress);

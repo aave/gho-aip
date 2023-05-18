@@ -14,8 +14,6 @@ contract DeployGhoListingPayload is Script {
     vm.startBroadcast(deployerPrivateKey);
 
     Helpers.deployListingPayload(
-      GHO_TOKEN,
-      GHO_FLASHMINTER,
       GHO_ORACLE,
       GHO_ATOKEN,
       GHO_VARIABLE_DEBT_TOKEN,
