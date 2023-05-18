@@ -5,11 +5,7 @@ import 'forge-std/console2.sol';
 import {Script} from 'forge-std/Script.sol';
 
 import {AaveV3Ethereum} from 'aave-address-book/AaveV3Ethereum.sol';
-<<<<<<< HEAD:scripts/LaunchGho.s.sol
 import {GhoListingPayload} from '../src/contracts/GhoListingPayload.sol';
-=======
-import {AaveGovernanceV2} from 'aave-address-book/AaveGovernanceV2.sol';
->>>>>>> main:scripts/LaunchGhoFork.s.sol
 import {Helpers} from './Helpers.sol';
 import './Constants.sol';
 
@@ -22,16 +18,6 @@ contract LaunchGho is Script {
     console2.log('deployerBalance', address(deployerAddress).balance);
     console2.log('BlockNumber', block.number);
 
-<<<<<<< HEAD:scripts/LaunchGho.s.sol
-=======
-    vm.startBroadcast(ghoDeployerPrivateKey);
-    address ghoToken = Helpers.deployGhoToken(AaveGovernanceV2.SHORT_EXECUTOR);
-    console2.log('GhoToken:', ghoToken);
-    // Transfer funds to the other deployer
-    payable(deployerAddress).transfer(1 ether);
-    vm.stopBroadcast();
-
->>>>>>> main:scripts/LaunchGhoFork.s.sol
     vm.startBroadcast(deployerPrivateKey);
 
     // Deploy AaveFacilitator
