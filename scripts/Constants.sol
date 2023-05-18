@@ -4,6 +4,8 @@ address constant GHO_VARIABLE_DEBT_TOKEN = address(1);
 address constant GHO_STABLE_DEBT_TOKEN = address(1);
 address constant GHO_INTEREST_RATE_STRATEGY = address(1);
 address constant GHO_DISCOUNT_RATE_STRATEGY = address(1);
+address constant PAYLOAD = address(1);
+bytes32 constant IPFS_HASH = bytes32(0);
 
 // Risk Params
 string constant FACILITATOR_AAVE_LABEL = 'Aave Ethereum V3 Pool';
