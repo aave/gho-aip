@@ -25,7 +25,7 @@ import {Errors} from '@aave/core-v3/contracts/protocol/libraries/helpers/Errors.
 import {WadRayMath} from '@aave/core-v3/contracts/protocol/libraries/math/WadRayMath.sol';
 
 import {GovHelper} from './GovHelper.sol';
-import {GhoListingPayload} from '../src/contracts/GhoListingPayload.sol';
+import {GhoListingPayload, Create2Helper} from '../src/contracts/GhoListingPayload.sol';
 import {Helpers} from '../scripts/Helpers.sol';
 import '../scripts/Constants.sol';
 
@@ -92,6 +92,59 @@ contract GhoListingTest is ProtocolV3TestBase {
     uint256 listingProposalId = _passProposal(AaveGovernanceV2.SHORT_EXECUTOR, GHO_AIP);
 
     _testListing(GHO_AIP, listingProposalId);
+  }
+
+  /**
+   * @dev Test the payload is executed correctly even with GhoToken and GhoFlashMinter contracts already deployed.
+   * This is possible due to the permissionless create2 singleton factory
+   */
+  function testPayloadExecutionWithContractsAlreadyDeployed() public {
+    vm.createSelectFork(vm.rpcUrl('mainnet'), STKAAVE_UPGRADE_BLOCK_NUMBER);
+
+    Helpers.AaveFacilitatorData memory aaveData = Helpers.deployAaveFacilitator(
+      address(AaveV3Ethereum.POOL),
+      VARIABLE_BORROW_RATE
+    );
+    address payloadAddress = Helpers.deployListingPayload(
+      aaveData.ghoOracle,
+      aaveData.ghoAToken,
+      aaveData.ghoVariableDebtToken,
+      aaveData.ghoStableDebtToken,
+      aaveData.ghoInterestRateStrategy,
+      aaveData.ghoDiscountRateStrategy
+    );
+    GhoListingPayload payload = GhoListingPayload(payloadAddress);
+    GHO_TOKEN = payload.precomputeGhoTokenAddress();
+    GHO_FLASHMINTER = payload.precomputeGhoFlashMinterAddress();
+
+    // Simulate stkAave upgrade
+    uint256 upgradeProposalId = _passProposal(
+      AaveGovernanceV2.LONG_EXECUTOR,
+      STKAAVE_UPGRADE_PAYLOAD
+    );
+    GovHelper._execute(upgradeProposalId);
+
+    // Simulate GOV action
+    uint256 listingProposalId = _passProposal(AaveGovernanceV2.SHORT_EXECUTOR, address(payload));
+
+    // GhoToken deployment
+    address deployedGhoToken = Create2Helper._deployCreate2(
+      abi.encodePacked(type(GhoToken).creationCode, abi.encode(AaveGovernanceV2.SHORT_EXECUTOR))
+    );
+    // GhoFlashMinter deployment
+    address deployedGhoFlashMinter = Create2Helper._deployCreate2(
+      abi.encodePacked(
+        type(GhoFlashMinter).creationCode,
+        abi.encode(
+          deployedGhoToken,
+          AaveV3Ethereum.COLLECTOR,
+          FLASHMINT_FEE,
+          address(AaveV3Ethereum.POOL_ADDRESSES_PROVIDER)
+        )
+      )
+    );
+
+    _testListing(address(payload), listingProposalId);
   }
 
   function _testListing(address payloadAddress, uint256 proposalId) internal {
