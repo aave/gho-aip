@@ -38,10 +38,6 @@ contract GhoListingTest is ProtocolV3TestBase {
   address public constant STKAAVE_UPGRADE_PAYLOAD = 0xe427FCbD54169136391cfEDf68E96abB13dA87A0; // AIP#124
   uint256 public constant STKAAVE_UPGRADE_BLOCK_NUMBER = 17138206;
 
-  bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
-  bytes32 public constant FACILITATOR_MANAGER = keccak256('FACILITATOR_MANAGER');
-  bytes32 public constant BUCKET_MANAGER = keccak256('BUCKET_MANAGER');
-
   address public GHO_TOKEN;
   address public GHO_FLASHMINTER;
 
@@ -246,7 +242,24 @@ contract GhoListingTest is ProtocolV3TestBase {
   function _validateGhoConfigurationPostProposal(GhoListingPayload payload) internal {
     // GHO
     assertEq(IGhoToken(GHO_TOKEN).totalSupply(), 0);
-    assertTrue(GhoToken(GHO_TOKEN).hasRole(DEFAULT_ADMIN_ROLE, AaveGovernanceV2.SHORT_EXECUTOR));
+    assertTrue(
+      GhoToken(GHO_TOKEN).hasRole(
+        GhoToken(GHO_TOKEN).DEFAULT_ADMIN_ROLE(),
+        AaveGovernanceV2.SHORT_EXECUTOR
+      )
+    );
+    assertTrue(
+      GhoToken(GHO_TOKEN).hasRole(
+        GhoToken(GHO_TOKEN).FACILITATOR_MANAGER_ROLE(),
+        AaveGovernanceV2.SHORT_EXECUTOR
+      )
+    );
+    assertTrue(
+      GhoToken(GHO_TOKEN).hasRole(
+        GhoToken(GHO_TOKEN).BUCKET_MANAGER_ROLE(),
+        AaveGovernanceV2.SHORT_EXECUTOR
+      )
+    );
 
     // Facilitators
     assertEq(IGhoToken(GHO_TOKEN).getFacilitatorsList().length, 2);
