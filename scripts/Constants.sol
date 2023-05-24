@@ -8,7 +8,7 @@ address constant PAYLOAD = address(1);
 bytes32 constant IPFS_HASH = bytes32(0);
 
 // Risk Params
-string constant FACILITATOR_AAVE_LABEL = 'Aave Ethereum V3 Pool';
+string constant FACILITATOR_AAVE_LABEL = 'Aave V3 Ethereum Pool';
 uint256 constant FACILITATOR_AAVE_BUCKET_CAPACITY = 100_000_000e18;
 string constant FACILITATOR_FLASHMINTER_LABEL = 'FlashMinter Facilitator';
 uint256 constant FACILITATOR_FLASHMINTER_BUCKET_CAPACITY = 2_000_000e18;
