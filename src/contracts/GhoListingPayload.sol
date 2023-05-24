@@ -57,7 +57,7 @@ contract GhoListingPayload is IProposalGenericExecutor {
   bytes32 public constant BUCKET_MANAGER = keccak256('BUCKET_MANAGER');
 
   // Aave Facilitator
-  string public constant FACILITATOR_AAVE_LABEL = 'Aave Ethereum V3 Pool';
+  string public constant FACILITATOR_AAVE_LABEL = 'Aave V3 Ethereum Pool';
   uint128 public constant FACILITATOR_AAVE_BUCKET_CAPACITY = 100_000_000 * 1e18;
 
   // GHO FlashMinter Facilitator
