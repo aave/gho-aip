@@ -15,13 +15,42 @@ interface IProposalGenericExecutor {
   function execute() external;
 }
 
-contract GhoListingPayload is IProposalGenericExecutor {
-  // Deployments
+library Create2Helper {
   address public constant CREATE2_SINGLETON_FACTORY = 0x2401ae9bBeF67458362710f90302Eb52b5Ce835a;
   bytes32 public constant CREATE2_SALT = bytes32(0);
-  address public GHO_TOKEN; // Deployed at AIP execution time
-  address public GHO_FLASHMINTER; // Deployed at AIP execution time
 
+  function _precomputeAddress(bytes memory bytecode) internal pure returns (address) {
+    return
+      address(
+        uint160(
+          uint(
+            keccak256(
+              abi.encodePacked(
+                bytes1(0xff),
+                CREATE2_SINGLETON_FACTORY,
+                CREATE2_SALT,
+                keccak256(bytecode)
+              )
+            )
+          )
+        )
+      );
+  }
+
+  function _deployCreate2(bytes memory bytecode) internal returns (address) {
+    (bool success, bytes memory returnData) = CREATE2_SINGLETON_FACTORY.call(
+      abi.encodePacked(CREATE2_SALT, bytecode)
+    );
+    require(success, 'CREATE2_DEPLOYMENT_FAILED');
+    return address(bytes20(returnData));
+  }
+
+  function _isContract(address account) internal view returns (bool) {
+    return account.code.length > 0;
+  }
+}
+
+contract GhoListingPayload is IProposalGenericExecutor {
   // GHO Token
   bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
   bytes32 public constant FACILITATOR_MANAGER = keccak256('FACILITATOR_MANAGER');
@@ -34,7 +63,7 @@ contract GhoListingPayload is IProposalGenericExecutor {
   // GHO FlashMinter Facilitator
   string public constant FACILITATOR_FLASHMINTER_LABEL = 'FlashMinter Facilitator';
   uint128 public constant FACILITATOR_FLASHMINTER_BUCKET_CAPACITY = 2_000_000 * 1e18;
-  uint128 public constant FLASHMINTER_FEE = 0;
+  uint128 public constant FLASHMINT_FEE = 0;
 
   // GHO Listing
   uint8 public constant GHO_DECIMALS = 18;
@@ -45,6 +74,8 @@ contract GhoListingPayload is IProposalGenericExecutor {
   string public constant SDTOKEN_NAME = 'Aave Ethereum Stable Debt GHO';
   string public constant SDTOKEN_SYMBOL = 'stableDebtEthGHO';
 
+  address public immutable GHO_TOKEN; // Deployed at AIP execution time
+  address public immutable GHO_FLASHMINTER; // Deployed at AIP execution time
   address public immutable GHO_ORACLE;
   address public immutable GHO_ATOKEN_IMPL;
   address public immutable GHO_VARIABLE_DEBT_TOKEN_IMPL;
@@ -62,6 +93,8 @@ contract GhoListingPayload is IProposalGenericExecutor {
     address ghoInterestRateStrategy,
     address ghoDiscountRateStrategy
   ) {
+    GHO_TOKEN = precomputeGhoTokenAddress();
+    GHO_FLASHMINTER = precomputeGhoFlashMinterAddress();
     GHO_ORACLE = ghoOracle;
     GHO_ATOKEN_IMPL = ghoATokenImpl;
     GHO_VARIABLE_DEBT_TOKEN_IMPL = ghoVariableDebtTokenImpl;
@@ -74,41 +107,42 @@ contract GhoListingPayload is IProposalGenericExecutor {
     // ------------------------------------------------
     // 1. Deployment of GhoToken
     // ------------------------------------------------
-    GHO_TOKEN = _deployCreate2(
-      abi.encodePacked(type(GhoToken).creationCode, abi.encode(AaveGovernanceV2.SHORT_EXECUTOR))
-    );
-    require(GHO_TOKEN == precomputeGhoTokenAddress(), 'UNEXPECTED_GHO_TOKEN_ADDRESS');
+    if (!Create2Helper._isContract(GHO_TOKEN)) {
+      address deployedGhoToken = Create2Helper._deployCreate2(
+        abi.encodePacked(type(GhoToken).creationCode, abi.encode(AaveGovernanceV2.SHORT_EXECUTOR))
+      );
+      require(GHO_TOKEN == deployedGhoToken, 'UNEXPECTED_GHO_TOKEN_ADDRESS');
+    }
     require(
-      GhoToken(GHO_TOKEN).hasRole(DEFAULT_ADMIN_ROLE, address(this)),
+      GhoToken(GHO_TOKEN).hasRole(DEFAULT_ADMIN_ROLE, AaveGovernanceV2.SHORT_EXECUTOR),
       'UNEXPECTED_GHO_DEPLOY_INIT'
     );
-    GhoToken(GHO_TOKEN).grantRole(FACILITATOR_MANAGER, address(this));
-    GhoToken(GHO_TOKEN).grantRole(BUCKET_MANAGER, address(this));
+    GhoToken(GHO_TOKEN).grantRole(FACILITATOR_MANAGER, AaveGovernanceV2.SHORT_EXECUTOR);
+    GhoToken(GHO_TOKEN).grantRole(BUCKET_MANAGER, AaveGovernanceV2.SHORT_EXECUTOR);
 
     // ------------------------------------------------
     // 2. Deployment of GhoFlashMinter
     // ------------------------------------------------
-    GHO_FLASHMINTER = _deployCreate2(
-      abi.encodePacked(
-        type(GhoFlashMinter).creationCode,
-        abi.encode(
-          precomputeGhoTokenAddress(),
-          AaveV3Ethereum.COLLECTOR,
-          FLASHMINTER_FEE,
-          address(AaveV3Ethereum.POOL_ADDRESSES_PROVIDER)
+    if (!Create2Helper._isContract(GHO_FLASHMINTER)) {
+      address deployedGhoFlashMinter = Create2Helper._deployCreate2(
+        abi.encodePacked(
+          type(GhoFlashMinter).creationCode,
+          abi.encode(
+            GHO_TOKEN,
+            AaveV3Ethereum.COLLECTOR,
+            FLASHMINT_FEE,
+            address(AaveV3Ethereum.POOL_ADDRESSES_PROVIDER)
+          )
         )
-      )
-    );
-    require(
-      GHO_FLASHMINTER == precomputeGhoFlashMinterAddress(),
-      'UNEXPECTED_GHO_FLASHMINTER_ADDRESS'
-    );
+      );
+      require(GHO_FLASHMINTER == deployedGhoFlashMinter, 'UNEXPECTED_GHO_FLASHMINTER_ADDRESS');
+    }
     require(
       address(GhoFlashMinter(GHO_FLASHMINTER).GHO_TOKEN()) == GHO_TOKEN,
       'UNEXPECTED_GHO_FLASHMINTER_DEPLOY_INIT1'
     );
     require(
-      GhoFlashMinter(GHO_FLASHMINTER).getFee() == FLASHMINTER_FEE,
+      GhoFlashMinter(GHO_FLASHMINTER).getFee() == FLASHMINT_FEE,
       'UNEXPECTED_GHO_FLASHMINTER_DEPLOY_INIT2'
     );
     require(
@@ -209,7 +243,7 @@ contract GhoListingPayload is IProposalGenericExecutor {
    */
   function precomputeGhoTokenAddress() public pure returns (address) {
     return
-      _precomputeAddress(
+      Create2Helper._precomputeAddress(
         abi.encodePacked(type(GhoToken).creationCode, abi.encode(AaveGovernanceV2.SHORT_EXECUTOR))
       );
   }
@@ -220,42 +254,16 @@ contract GhoListingPayload is IProposalGenericExecutor {
    */
   function precomputeGhoFlashMinterAddress() public pure returns (address) {
     return
-      _precomputeAddress(
+      Create2Helper._precomputeAddress(
         abi.encodePacked(
           type(GhoFlashMinter).creationCode,
           abi.encode(
             precomputeGhoTokenAddress(),
             AaveV3Ethereum.COLLECTOR,
-            FLASHMINTER_FEE,
+            FLASHMINT_FEE,
             address(AaveV3Ethereum.POOL_ADDRESSES_PROVIDER)
           )
         )
       );
-  }
-
-  function _precomputeAddress(bytes memory bytecode) internal pure returns (address) {
-    return
-      address(
-        uint160(
-          uint(
-            keccak256(
-              abi.encodePacked(
-                bytes1(0xff),
-                CREATE2_SINGLETON_FACTORY,
-                CREATE2_SALT,
-                keccak256(bytecode)
-              )
-            )
-          )
-        )
-      );
-  }
-
-  function _deployCreate2(bytes memory bytecode) internal returns (address) {
-    (bool success, bytes memory returnData) = CREATE2_SINGLETON_FACTORY.call(
-      abi.encodePacked(CREATE2_SALT, bytecode)
-    );
-    require(success, 'CREATE2_DEPLOYMENT_FAILED');
-    return address(bytes20(returnData));
   }
 }
