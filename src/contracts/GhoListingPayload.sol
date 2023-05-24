@@ -51,11 +51,6 @@ library Create2Helper {
 }
 
 contract GhoListingPayload is IProposalGenericExecutor {
-  // GHO Token
-  bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
-  bytes32 public constant FACILITATOR_MANAGER = keccak256('FACILITATOR_MANAGER');
-  bytes32 public constant BUCKET_MANAGER = keccak256('BUCKET_MANAGER');
-
   // Aave Facilitator
   string public constant FACILITATOR_AAVE_LABEL = 'Aave V3 Ethereum Pool';
   uint128 public constant FACILITATOR_AAVE_BUCKET_CAPACITY = 100_000_000 * 1e18;
@@ -114,11 +109,20 @@ contract GhoListingPayload is IProposalGenericExecutor {
       require(GHO_TOKEN == deployedGhoToken, 'UNEXPECTED_GHO_TOKEN_ADDRESS');
     }
     require(
-      GhoToken(GHO_TOKEN).hasRole(DEFAULT_ADMIN_ROLE, AaveGovernanceV2.SHORT_EXECUTOR),
+      GhoToken(GHO_TOKEN).hasRole(
+        GhoToken(GHO_TOKEN).DEFAULT_ADMIN_ROLE(),
+        AaveGovernanceV2.SHORT_EXECUTOR
+      ),
       'UNEXPECTED_GHO_DEPLOY_INIT'
     );
-    GhoToken(GHO_TOKEN).grantRole(FACILITATOR_MANAGER, AaveGovernanceV2.SHORT_EXECUTOR);
-    GhoToken(GHO_TOKEN).grantRole(BUCKET_MANAGER, AaveGovernanceV2.SHORT_EXECUTOR);
+    GhoToken(GHO_TOKEN).grantRole(
+      GhoToken(GHO_TOKEN).FACILITATOR_MANAGER_ROLE(),
+      AaveGovernanceV2.SHORT_EXECUTOR
+    );
+    GhoToken(GHO_TOKEN).grantRole(
+      GhoToken(GHO_TOKEN).BUCKET_MANAGER_ROLE(),
+      AaveGovernanceV2.SHORT_EXECUTOR
+    );
 
     // ------------------------------------------------
     // 2. Deployment of GhoFlashMinter
