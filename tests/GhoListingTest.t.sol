@@ -35,14 +35,13 @@ contract GhoListingTest is ProtocolV3TestBase {
   address constant AAVE = 0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9;
   address public constant STKAAVE = 0x4da27a545c0c5B758a6BA100e3a049001de870f5;
 
-  address public constant STKAAVE_UPGRADE_PAYLOAD = 0xe427FCbD54169136391cfEDf68E96abB13dA87A0; // AIP#124
-  uint256 public constant STKAAVE_UPGRADE_BLOCK_NUMBER = 17138206;
+  uint256 public constant FORK_BLOCK_NUMBER = 17334690;
 
   address public GHO_TOKEN;
   address public GHO_FLASHMINTER;
 
   function testListingComplete() public {
-    vm.createSelectFork(vm.rpcUrl('mainnet'), STKAAVE_UPGRADE_BLOCK_NUMBER);
+    vm.createSelectFork(vm.rpcUrl('mainnet'), FORK_BLOCK_NUMBER);
 
     Helpers.AaveFacilitatorData memory aaveData = Helpers.deployAaveFacilitator(
       address(AaveV3Ethereum.POOL),
@@ -60,13 +59,6 @@ contract GhoListingTest is ProtocolV3TestBase {
     GHO_TOKEN = payload.precomputeGhoTokenAddress();
     GHO_FLASHMINTER = payload.precomputeGhoFlashMinterAddress();
 
-    // Simulate stkAave upgrade
-    uint256 upgradeProposalId = _passProposal(
-      AaveGovernanceV2.LONG_EXECUTOR,
-      STKAAVE_UPGRADE_PAYLOAD
-    );
-    GovHelper._execute(upgradeProposalId);
-
     // Simulate GOV action
     uint256 listingProposalId = _passProposal(AaveGovernanceV2.SHORT_EXECUTOR, address(payload));
 
@@ -74,15 +66,8 @@ contract GhoListingTest is ProtocolV3TestBase {
   }
 
   function _testListingWithPayload() public {
-    vm.createSelectFork(vm.rpcUrl('mainnet'), STKAAVE_UPGRADE_BLOCK_NUMBER);
+    vm.createSelectFork(vm.rpcUrl('mainnet'), FORK_BLOCK_NUMBER);
     address GHO_AIP = address(0); // TODO
-
-    // Simulate stkAave upgrade
-    uint256 upgradeProposalId = _passProposal(
-      AaveGovernanceV2.LONG_EXECUTOR,
-      STKAAVE_UPGRADE_PAYLOAD
-    );
-    GovHelper._execute(upgradeProposalId);
 
     // Simulate GOV action
     uint256 listingProposalId = _passProposal(AaveGovernanceV2.SHORT_EXECUTOR, GHO_AIP);
@@ -95,7 +80,7 @@ contract GhoListingTest is ProtocolV3TestBase {
    * This is possible due to the permissionless create2 singleton factory
    */
   function testPayloadExecutionWithContractsAlreadyDeployed() public {
-    vm.createSelectFork(vm.rpcUrl('mainnet'), STKAAVE_UPGRADE_BLOCK_NUMBER);
+    vm.createSelectFork(vm.rpcUrl('mainnet'), FORK_BLOCK_NUMBER);
 
     Helpers.AaveFacilitatorData memory aaveData = Helpers.deployAaveFacilitator(
       address(AaveV3Ethereum.POOL),
@@ -112,13 +97,6 @@ contract GhoListingTest is ProtocolV3TestBase {
     GhoListingPayload payload = GhoListingPayload(payloadAddress);
     GHO_TOKEN = payload.precomputeGhoTokenAddress();
     GHO_FLASHMINTER = payload.precomputeGhoFlashMinterAddress();
-
-    // Simulate stkAave upgrade
-    uint256 upgradeProposalId = _passProposal(
-      AaveGovernanceV2.LONG_EXECUTOR,
-      STKAAVE_UPGRADE_PAYLOAD
-    );
-    GovHelper._execute(upgradeProposalId);
 
     // Simulate GOV action
     uint256 listingProposalId = _passProposal(AaveGovernanceV2.SHORT_EXECUTOR, address(payload));

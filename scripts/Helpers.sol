@@ -66,7 +66,10 @@ library Helpers {
       'GHO_VARIABLE_DEBT_TOKEN_IMPL',
       '0x0'
     );
-    GhoInterestRateStrategy ghoInterestRateStrategy = new GhoInterestRateStrategy(ghoInterestRate);
+    GhoInterestRateStrategy ghoInterestRateStrategy = new GhoInterestRateStrategy(
+      address(IPool(pool).ADDRESSES_PROVIDER()),
+      ghoInterestRate
+    );
     GhoDiscountRateStrategy ghoDiscountRateStrategy = new GhoDiscountRateStrategy();
 
     return
