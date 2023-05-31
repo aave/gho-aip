@@ -223,7 +223,7 @@ contract GhoListingPayload is IProposalGenericExecutor {
     );
 
     // ------------------------------------------------
-    // 6. Registration of AaveFacilitator
+    // 7. Registration of AaveFacilitator
     // ------------------------------------------------
     GhoToken(GHO_TOKEN).addFacilitator(
       ghoATokenAddress,
@@ -232,7 +232,7 @@ contract GhoListingPayload is IProposalGenericExecutor {
     );
 
     // ------------------------------------------------
-    // 7. Registration of FlashMinter
+    // 8. Registration of FlashMinter
     // ------------------------------------------------
     GhoToken(GHO_TOKEN).addFacilitator(
       GHO_FLASHMINTER,
