@@ -23,7 +23,7 @@ on:
 jobs:
   test:
     name: Foundry build n test
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     env:
       FOUNDRY_PROFILE: ci
       NO_COLOR: 1
