@@ -56,8 +56,8 @@ contract GhoListingTest is ProtocolV3TestBase {
       aaveData.ghoDiscountRateStrategy
     );
     GhoListingPayload payload = GhoListingPayload(payloadAddress);
-    GHO_TOKEN = payload.precomputeGhoTokenAddress();
-    GHO_FLASHMINTER = payload.precomputeGhoFlashMinterAddress();
+    GHO_TOKEN = payload.GHO_TOKEN();
+    GHO_FLASHMINTER = payload.GHO_FLASHMINTER();
 
     // Simulate GOV action
     uint256 listingProposalId = _passProposal(AaveGovernanceV2.SHORT_EXECUTOR, address(payload));
@@ -95,8 +95,8 @@ contract GhoListingTest is ProtocolV3TestBase {
       aaveData.ghoDiscountRateStrategy
     );
     GhoListingPayload payload = GhoListingPayload(payloadAddress);
-    GHO_TOKEN = payload.precomputeGhoTokenAddress();
-    GHO_FLASHMINTER = payload.precomputeGhoFlashMinterAddress();
+    GHO_TOKEN = payload.GHO_TOKEN();
+    GHO_FLASHMINTER = payload.GHO_FLASHMINTER();
 
     // Simulate GOV action
     uint256 listingProposalId = _passProposal(AaveGovernanceV2.SHORT_EXECUTOR, address(payload));

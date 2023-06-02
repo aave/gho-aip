@@ -19,7 +19,7 @@ library Create2Helper {
   address public constant CREATE2_SINGLETON_FACTORY = 0x2401ae9bBeF67458362710f90302Eb52b5Ce835a;
   bytes32 public constant CREATE2_SALT = bytes32(0);
 
-  function _precomputeAddress(bytes memory bytecode) internal pure returns (address) {
+  function _precomputeAddress(bytes memory bytecode) external pure returns (address) {
     return
       address(
         uint160(
@@ -37,7 +37,7 @@ library Create2Helper {
       );
   }
 
-  function _deployCreate2(bytes memory bytecode) internal returns (address) {
+  function _deployCreate2(bytes memory bytecode) external returns (address) {
     (bool success, bytes memory returnData) = CREATE2_SINGLETON_FACTORY.call(
       abi.encodePacked(CREATE2_SALT, bytecode)
     );
@@ -45,7 +45,7 @@ library Create2Helper {
     return address(bytes20(returnData));
   }
 
-  function _isContract(address account) internal view returns (bool) {
+  function _isContract(address account) external view returns (bool) {
     return account.code.length > 0;
   }
 }
@@ -88,8 +88,20 @@ contract GhoListingPayload is IProposalGenericExecutor {
     address ghoInterestRateStrategy,
     address ghoDiscountRateStrategy
   ) {
-    GHO_TOKEN = precomputeGhoTokenAddress();
-    GHO_FLASHMINTER = precomputeGhoFlashMinterAddress();
+    GHO_TOKEN = Create2Helper._precomputeAddress(
+      abi.encodePacked(type(GhoToken).creationCode, abi.encode(AaveGovernanceV2.SHORT_EXECUTOR))
+    );
+    GHO_FLASHMINTER = Create2Helper._precomputeAddress(
+      abi.encodePacked(
+        type(GhoFlashMinter).creationCode,
+        abi.encode(
+          GHO_TOKEN,
+          AaveV3Ethereum.COLLECTOR,
+          FLASHMINT_FEE,
+          address(AaveV3Ethereum.POOL_ADDRESSES_PROVIDER)
+        )
+      )
+    );
     GHO_ORACLE = ghoOracle;
     GHO_ATOKEN_IMPL = ghoATokenImpl;
     GHO_VARIABLE_DEBT_TOKEN_IMPL = ghoVariableDebtTokenImpl;
@@ -239,35 +251,5 @@ contract GhoListingPayload is IProposalGenericExecutor {
       FACILITATOR_FLASHMINTER_LABEL,
       FACILITATOR_FLASHMINTER_BUCKET_CAPACITY
     );
-  }
-
-  /**
-   * @notice Returns the precomputed address of GHO token
-   * @return The precomputed address of the GhoToken
-   */
-  function precomputeGhoTokenAddress() public pure returns (address) {
-    return
-      Create2Helper._precomputeAddress(
-        abi.encodePacked(type(GhoToken).creationCode, abi.encode(AaveGovernanceV2.SHORT_EXECUTOR))
-      );
-  }
-
-  /**
-   * @notice Returns the precomputed address of the GHO FlashMinter
-   * @return The precomputed address of the GhoFlashMinter
-   */
-  function precomputeGhoFlashMinterAddress() public pure returns (address) {
-    return
-      Create2Helper._precomputeAddress(
-        abi.encodePacked(
-          type(GhoFlashMinter).creationCode,
-          abi.encode(
-            precomputeGhoTokenAddress(),
-            AaveV3Ethereum.COLLECTOR,
-            FLASHMINT_FEE,
-            address(AaveV3Ethereum.POOL_ADDRESSES_PROVIDER)
-          )
-        )
-      );
   }
 }
