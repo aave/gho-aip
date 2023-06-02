@@ -41,14 +41,14 @@ contract LaunchGho is Script {
       aaveData.ghoInterestRateStrategy,
       aaveData.ghoDiscountRateStrategy
     );
-    console2.log('GhoToken:', GhoListingPayload(payload).precomputeGhoTokenAddress());
-    console2.log('FlashMinter:', GhoListingPayload(payload).precomputeGhoFlashMinterAddress());
+    console2.log('GhoToken:', GhoListingPayload(payload).GHO_TOKEN());
+    console2.log('FlashMinter:', GhoListingPayload(payload).GHO_FLASHMINTER());
     console2.log('Payload:', payload);
 
     // Deploy GhoUiDataProvider
     address ghoUiDataProvider = Helpers.deployGhoUiDataProvider(
       address(AaveV3Ethereum.POOL),
-      GhoListingPayload(payload).precomputeGhoTokenAddress()
+      GhoListingPayload(payload).GHO_TOKEN()
     );
     console2.log('GhoUiDataProvider:', ghoUiDataProvider);
 

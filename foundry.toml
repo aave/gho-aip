@@ -4,10 +4,16 @@ test = 'tests'
 script = 'scripts'
 out = 'out'
 libs = ['lib']
+
 remappings = [
     'solidity-utils/=lib/solidity-utils/src'
 ]
 fs_permissions = [{access = "write", path = "./reports"}]
+
+solc_version = "0.8.10"
+extra_output_files = ["metadata"]
+optimizer = true
+optimizer_runs = 5000
 
 [rpc_endpoints]
 mainnet = "${RPC_MAINNET}"
