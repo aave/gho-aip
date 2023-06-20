@@ -55,10 +55,10 @@ library Create2Helper {
  * @author @AaveCo
  * @notice This proposal initiates GHO, which consists of a set of actions:
  * - Deployment of GHO ERC20 and transfer ownership to Aave DAO (Short Executor)
- * - Listing of GHO as borrowable asset in the Aave Protocol
- * - Enrollment of Aave V3 Ethereum Pool as the first facilitator of GHO
- * - Deployment of GhoFlashMinter and enrollment as the second facilitator of GHO
- * - Configuration of StkAave as discount token for GHO borrow rate
+ * - Listing of GHO as a borrowable asset in the Aave Protocol
+ * - Enrollment of Aave V3 Ethereum Pool as the first Facilitator of GHO
+ * - Deployment of GhoFlashMinter and enrollment as the second Facilitator of GHO
+ * - Configuration of StkAAVE as discount token for GHO borrow rate
  * Relevant governance links:
  * 1. Introducing GHO
  *  - Snapshot: https://snapshot.org/#/aave.eth/proposal/0xb17b3294dcb08316cb623c717add7f82df54948d558992f886be59d0958e9b24
@@ -70,8 +70,7 @@ library Create2Helper {
  *  - Snapshot: https://snapshot.org/#/aave.eth/proposal/0x7a2698df2cf35edd4f1739f7657bcf918c8cd3290e1640cba01c3046968a5022
  *  - Discussion: https://governance.aave.com/t/temp-check-flashminter-facilitator-approval/13092
  * 4. GHO Launch
- *  - Snapshot: TBD
- *  - Discussion: TBD
+ *  - Discussion: https://governance.aave.com/t/arfc-gho-mainnet-launch/13574
  */
 contract GhoListingPayload is IProposalGenericExecutor {
   // Aave Facilitator
