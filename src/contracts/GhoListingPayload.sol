@@ -50,6 +50,28 @@ library Create2Helper {
   }
 }
 
+/**
+ * @title GHO Genesis Proposal
+ * @author @AaveCo
+ * @notice This proposal initiates GHO, which consists of a set of actions:
+ * - Deployment of GHO ERC20 and transfer ownership to Aave DAO (Short Executor)
+ * - Listing of GHO as a borrowable asset in the Aave Protocol
+ * - Enrollment of Aave V3 Ethereum Pool as the first Facilitator of GHO
+ * - Deployment of GhoFlashMinter and enrollment as the second Facilitator of GHO
+ * - Configuration of StkAAVE as discount token for GHO borrow rate
+ * Relevant governance links:
+ * 1. Introducing GHO
+ *  - Snapshot: https://snapshot.org/#/aave.eth/proposal/0xb17b3294dcb08316cb623c717add7f82df54948d558992f886be59d0958e9b24
+ *  - Discussion: https://governance.aave.com/t/introducing-gho/8730
+ * 2. Aave V3 Ethereum Facilitator and Initial Parameters
+ *  - Snapshot: https://snapshot.org/#/aave.eth/proposal/0xb413a17004875443fa3dcf90b07e249b5c4592a760b6daf7b06909131f9fc30c
+ *  - Discussion: https://governance.aave.com/t/arfc-gho-genesis-parameters/12151
+ * 3. FlashMinter Facilitator
+ *  - Snapshot: https://snapshot.org/#/aave.eth/proposal/0x7a2698df2cf35edd4f1739f7657bcf918c8cd3290e1640cba01c3046968a5022
+ *  - Discussion: https://governance.aave.com/t/temp-check-flashminter-facilitator-approval/13092
+ * 4. GHO Launch
+ *  - Discussion: https://governance.aave.com/t/arfc-gho-mainnet-launch/13574
+ */
 contract GhoListingPayload is IProposalGenericExecutor {
   // Aave Facilitator
   string public constant FACILITATOR_AAVE_LABEL = 'Aave V3 Ethereum Pool';
@@ -235,7 +257,7 @@ contract GhoListingPayload is IProposalGenericExecutor {
     );
 
     // ------------------------------------------------
-    // 6. Registration of AaveFacilitator
+    // 7. Registration of AaveFacilitator
     // ------------------------------------------------
     GhoToken(GHO_TOKEN).addFacilitator(
       ghoATokenAddress,
@@ -244,7 +266,7 @@ contract GhoListingPayload is IProposalGenericExecutor {
     );
 
     // ------------------------------------------------
-    // 7. Registration of FlashMinter
+    // 8. Registration of FlashMinter
     // ------------------------------------------------
     GhoToken(GHO_TOKEN).addFacilitator(
       GHO_FLASHMINTER,
