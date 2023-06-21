@@ -1,10 +1,12 @@
-address constant GHO_ORACLE = address(1);
-address constant GHO_ATOKEN = address(1);
-address constant GHO_VARIABLE_DEBT_TOKEN = address(1);
-address constant GHO_STABLE_DEBT_TOKEN = address(1);
-address constant GHO_INTEREST_RATE_STRATEGY = address(1);
-address constant GHO_DISCOUNT_RATE_STRATEGY = address(1);
-address constant PAYLOAD = address(1);
+// SPDX-License-Identifier: MIT
+
+address constant GHO_ORACLE = 0xD110cac5d8682A3b045D5524a9903E031d70FCCd;
+address constant GHO_ATOKEN = 0x2f32A274e02FA356423CE5e97a8e3155c1Ac396b;
+address constant GHO_VARIABLE_DEBT_TOKEN = 0x3FEaB6F8510C73E05b8C0Fdf96Df012E3A144319;
+address constant GHO_STABLE_DEBT_TOKEN = 0x05b435C741F5ab03C2E6735e23f1b7Fe01Cc6b22;
+address constant GHO_INTEREST_RATE_STRATEGY = 0x16E77D8a7192b65fEd49B3374417885Ff4421A74;
+address constant GHO_DISCOUNT_RATE_STRATEGY = 0x4C38Ec4D1D2068540DfC11DFa4de41F733DDF812;
+address constant PAYLOAD = 0x39Bb84eb71dCC1817EA4578377959e2d6841EBB9;
 bytes32 constant IPFS_HASH = bytes32(0);
 
 // Risk Params
