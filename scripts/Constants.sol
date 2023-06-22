@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 address constant GHO_ORACLE = 0xD110cac5d8682A3b045D5524a9903E031d70FCCd;
 address constant GHO_ATOKEN = 0x2f32A274e02FA356423CE5e97a8e3155c1Ac396b;

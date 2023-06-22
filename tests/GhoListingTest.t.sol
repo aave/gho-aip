@@ -364,7 +364,7 @@ contract GhoListingTest is ProtocolV3TestBase {
     this._borrow(ghoConfig, AaveV3Ethereum.POOL, BOB, borrowableGHO, false);
 
     // Alice repays half of the borrow
-    _repay(ghoConfig, AaveV3Ethereum.POOL, ALICE, borrowableGHO / 2, false);
+    _repay(ghoConfig, AaveV3Ethereum.POOL, ALICE, borrowableGHO / 10, false);
 
     // Bob receives 1000 stkAave and get a discount
     (, , address ghoVariableDebtTokenAddress) = AaveV3Ethereum
