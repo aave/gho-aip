@@ -67,7 +67,7 @@ contract GhoListingTest is ProtocolV3TestBase {
 
   function testListingWithPayload() public {
     vm.createSelectFork(vm.rpcUrl('mainnet'), FORK_BLOCK_NUMBER);
-    GhoListingPayload payload = GhoListingPayload(0x39Bb84eb71dCC1817EA4578377959e2d6841EBB9);
+    GhoListingPayload payload = GhoListingPayload(PAYLOAD);
 
     // Simulate GOV action
     uint256 listingProposalId = _passProposal(AaveGovernanceV2.SHORT_EXECUTOR, address(payload));
