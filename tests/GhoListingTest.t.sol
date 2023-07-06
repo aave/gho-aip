@@ -35,7 +35,7 @@ contract GhoListingTest is ProtocolV3TestBase {
   address constant AAVE = 0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9;
   address public constant STKAAVE = 0x4da27a545c0c5B758a6BA100e3a049001de870f5;
 
-  uint256 public constant FORK_BLOCK_NUMBER = 17334690;
+  uint256 public constant FORK_BLOCK_NUMBER = 17633619;
 
   address public GHO_TOKEN;
   address public GHO_FLASHMINTER;
@@ -65,14 +65,16 @@ contract GhoListingTest is ProtocolV3TestBase {
     _testListing(address(payload), listingProposalId);
   }
 
-  function _testListingWithPayload() public {
+  function testListingWithPayload() public {
     vm.createSelectFork(vm.rpcUrl('mainnet'), FORK_BLOCK_NUMBER);
-    address GHO_AIP = address(0); // TODO
+    GhoListingPayload payload = GhoListingPayload(PAYLOAD);
 
     // Simulate GOV action
-    uint256 listingProposalId = _passProposal(AaveGovernanceV2.SHORT_EXECUTOR, GHO_AIP);
+    uint256 listingProposalId = _passProposal(AaveGovernanceV2.SHORT_EXECUTOR, address(payload));
+    GHO_TOKEN = payload.GHO_TOKEN();
+    GHO_FLASHMINTER = payload.GHO_FLASHMINTER();
 
-    _testListing(GHO_AIP, listingProposalId);
+    _testListing(address(payload), listingProposalId);
   }
 
   /**
@@ -362,7 +364,7 @@ contract GhoListingTest is ProtocolV3TestBase {
     this._borrow(ghoConfig, AaveV3Ethereum.POOL, BOB, borrowableGHO, false);
 
     // Alice repays half of the borrow
-    _repay(ghoConfig, AaveV3Ethereum.POOL, ALICE, borrowableGHO / 2, false);
+    _repay(ghoConfig, AaveV3Ethereum.POOL, ALICE, borrowableGHO / 10, false);
 
     // Bob receives 1000 stkAave and get a discount
     (, , address ghoVariableDebtTokenAddress) = AaveV3Ethereum
