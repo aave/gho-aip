@@ -35,7 +35,7 @@ contract GhoListingTest is ProtocolV3TestBase {
   address constant AAVE = 0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9;
   address public constant STKAAVE = 0x4da27a545c0c5B758a6BA100e3a049001de870f5;
 
-  uint256 public constant FORK_BLOCK_NUMBER = 17527400;
+  uint256 public constant FORK_BLOCK_NUMBER = 17633619;
 
   address public GHO_TOKEN;
   address public GHO_FLASHMINTER;
