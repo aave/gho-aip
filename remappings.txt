@@ -1,4 +1,13 @@
+forge-std/=lib/forge-std/src/
+ds-test/=lib/forge-std/lib/ds-test/src/
+aave-address-book/=lib/aave-address-book/src/
+aave-stk-v1-5/=lib/aave-stk-v1-5/src/
+solidity-utils/=lib/solidity-utils/src/
+
 openzeppelin-contracts/=lib/openzeppelin-contracts/
 @openzeppelin/=lib/openzeppelin-contracts/
-aave-stk-v1-5/=lib/aave-stk-v1-5/src/
 gho-core/=lib/gho-core/src/contracts/
+@aave/core-v3/=lib/aave-v3-core/
+aave-v3-core/=lib/aave-v3-core/
+
+aave-helpers/=lib/aave-helpers/
